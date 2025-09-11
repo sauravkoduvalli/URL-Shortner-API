@@ -9,6 +9,8 @@ export const findUserByEmail = async (email) => {
       firstName: usersTable.firstName,
       lastName: usersTable.lastName,
       email: usersTable.email,
+      salt: usersTable.salt,
+      password: usersTable.password,
     })
     .from(usersTable)
     .where(eq(usersTable.email, email));
@@ -36,5 +38,29 @@ export const createUserById = async (
       id: usersTable.id,
     });
 
+  return user;
+};
+
+export const getUsersByMail = async (email = undefined) => {
+  if ((email === null) | (email === undefined)) {
+    const users = await db
+      .select({
+        id: usersTable.id,
+        email: usersTable.email,
+        firstName: usersTable.firstName,
+        lastName: usersTable.lastName,
+      })
+      .from(usersTable);
+    return users;
+  }
+  const [user] = await db
+    .select({
+      id: usersTable.id,
+      email: usersTable.email,
+      firstName: usersTable.firstName,
+      lastName: usersTable.lastName,
+    })
+    .from(usersTable)
+    .where(eq(email, usersTable.email));
   return user;
 };

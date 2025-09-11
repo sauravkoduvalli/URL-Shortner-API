@@ -1,8 +1,16 @@
 import express from "express";
+import jwt from "jsonwebtoken";
 
-import { signupPostRequestBodySchema } from "../utils/validation/request.validation.js";
+import {
+  signupPostRequestBodySchema,
+  loginPostRequestBodySchema,
+} from "../utils/validation/request.validation.js";
 import { hashPasswordWithSalt } from "../utils/hash.js";
-import { createUserById, findUserByEmail } from "../services/user.service.js";
+import {
+  createUserById,
+  findUserByEmail,
+  getUsersByMail,
+} from "../services/user.service.js";
 
 const router = express.Router();
 
@@ -45,6 +53,63 @@ router.post("/signup", async (req, res) => {
     .json({ message: "Successfully registered", data: { id: user.id } });
 });
 
+router.post("/login", async (req, res) => {
+  const validationResult = await loginPostRequestBodySchema.safeParseAsync(
+    req.body
+  );
 
+  if (validationResult.error) {
+    return res.status(400).json({ error: validationResult.error.issues });
+  }
+
+  const { email, password } = validationResult.data;
+
+  const user = await findUserByEmail(email);
+
+  if (!user) {
+    return res
+      .status(404)
+      .json({ error: `user with email: ${email} is not exists!` });
+  }
+
+  const { password: hashedPassword } = hashPasswordWithSalt(
+    password,
+    user.salt
+  );
+
+  if (user.password !== hashedPassword) {
+    return res.status(400).json({ error: "Invalid password" });
+  }
+
+  const payload = {
+    id: user.id,
+    email: user.email,
+    name: `${user.firstName}` + `${user.lastName}`,
+  };
+
+  const token = jwt.sign(payload, process.env.JWT_SECRET);
+
+  return res.json({ token });
+});
+
+router.get("/all", async (req, res) => {
+  const tokenHeader = req.headers["authorization"];
+  if (!tokenHeader)
+    return res.status(400).json({ error: "Unauthorized access restricted" });
+
+  if (!tokenHeader.startsWith("Bearer")) {
+    return res
+      .status(400)
+      .json({ error: "Authorization header must start with Bearer Keyword" });
+  }
+
+  const token = tokenHeader.split(" ")[1];
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+  req.user = decoded;
+
+  const users = await getUsersByMail('saurav27@gmail.com');
+  return res.json({ ststus: "success", users });
+});
 
 export default router;
