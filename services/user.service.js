@@ -40,27 +40,3 @@ export const createUserById = async (
 
   return user;
 };
-
-export const getUsersByMail = async (email = undefined) => {
-  if ((email === null) | (email === undefined)) {
-    const users = await db
-      .select({
-        id: usersTable.id,
-        email: usersTable.email,
-        firstName: usersTable.firstName,
-        lastName: usersTable.lastName,
-      })
-      .from(usersTable);
-    return users;
-  }
-  const [user] = await db
-    .select({
-      id: usersTable.id,
-      email: usersTable.email,
-      firstName: usersTable.firstName,
-      lastName: usersTable.lastName,
-    })
-    .from(usersTable)
-    .where(eq(email, usersTable.email));
-  return user;
-};

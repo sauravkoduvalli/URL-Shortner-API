@@ -4,7 +4,7 @@ import {
 } from "../utils/validation/request.validation.js";
 import { createUserById } from "../services/user.service.js";
 import { hashPasswordWithSalt } from "../utils/hash.js";
-import { findUserByEmail, getUsersByMail } from "../services/user.service.js";
+import { findUserByEmail } from "../services/user.service.js";
 import { createUserToken } from "../utils/token.js";
 
 export const signupController = async (req, res) => {
@@ -83,15 +83,4 @@ export const loginController = async (req, res) => {
   const token = await createUserToken(payload);
 
   return res.json({ token });
-};
-
-export const getUsersController = async (req, res) => {
-  const user = req.user;
-
-  if (!user) {
-    return res.status(400).json({ error: "Unauthorized access restricted" });
-  }
-
-  const users = await getUsersByMail("saurav27@gmail.com");
-  return res.json({ ststus: "success", users });
 };
